@@ -1,5 +1,7 @@
 package com.example.chefbackend.service;
 
+import com.example.chefbackend.dto.ChefDto;
+import com.example.chefbackend.dto.ChefMapper;
 import com.example.chefbackend.model.Chef;
 import com.example.chefbackend.repository.ChefRepository;
 import org.springframework.stereotype.Service;
@@ -14,12 +16,18 @@ public class ChefService {
         this.repo = repo;
     }
 
-    public Chef seed() {
+    // Seed a demo chef and return as DTO
+    public ChefDto seed() {
         Chef c = new Chef("Luca", "Italian", 75);
-        return repo.save(c);
+        Chef saved = repo.save(c);
+        return ChefMapper.toDto(saved);
     }
 
-    public List<Chef> findAll() {
-        return repo.findAll();
+    // Return ALL chefs as DTOs (no entities)
+    public List<ChefDto> findAll() {
+        return repo.findAll()
+                .stream()
+                .map(ChefMapper::toDto)
+                .toList();
     }
 }
