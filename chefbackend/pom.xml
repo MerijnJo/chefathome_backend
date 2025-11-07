@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
+        <sonar.organization>merijnjo</sonar.organization>
     </properties>
 
     <dependencies>
