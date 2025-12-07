@@ -1,33 +1,59 @@
 package com.example.chefbackend.service;
 
-import com.example.chefbackend.dto.ChefDto;
-import com.example.chefbackend.dto.ChefMapper;
+import com.example.chefbackend.dto.ChefDetailDto;
+import com.example.chefbackend.dto.ChefSummaryDto;
+import com.example.chefbackend.dto.ChefSummaryDto;
+import com.example.chefbackend.mapper.ChefMapper;
 import com.example.chefbackend.model.Chef;
 import com.example.chefbackend.repository.ChefRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ChefService {
-    private final ChefRepository repo;
 
-    public ChefService(ChefRepository repo) {
-        this.repo = repo;
+    private final ChefRepository chefRepository;
+    private final ChefMapper chefMapper;
+
+    public ChefService(ChefRepository chefRepository, ChefMapper chefMapper) {
+        this.chefRepository = chefRepository;
+        this.chefMapper = chefMapper;
     }
 
-    // Seed a demo chef and return as DTO
-    public ChefDto seed() {
-        Chef c = new Chef("Luca", "Italian", 75);
-        Chef saved = repo.save(c);
-        return ChefMapper.toDto(saved);
+    public List<ChefSummaryDto> getAllChefsSummary() {
+        return chefRepository.findAll().stream()
+                .map(chefMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
-    // Return ALL chefs as DTOs (no entities)
-    public List<ChefDto> findAll() {
-        return repo.findAll()
-                .stream()
-                .map(ChefMapper::toDto)
-                .toList();
+    public ChefDetailDto getChefById(Long id) {
+        Chef chef = chefRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Chef not found with id: " + id));
+        return chefMapper.toDetailDto(chef);
+    }
+
+    public ChefDetailDto createChef(ChefDetailDto chefDto) {
+        Chef chef = chefMapper.toEntity(chefDto);
+        Chef savedChef = chefRepository.save(chef);
+        return chefMapper.toDetailDto(savedChef);
+    }
+
+    public ChefDetailDto updateChef(Long id, ChefDetailDto chefDto) {
+        if (!chefRepository.existsById(id)) {
+            throw new RuntimeException("Chef not found with id: " + id);
+        }
+        Chef chef = chefMapper.toEntity(chefDto);
+        chef.setId(id);
+        Chef updatedChef = chefRepository.save(chef);
+        return chefMapper.toDetailDto(updatedChef);
+    }
+
+    public void deleteChef(Long id) {
+        if (!chefRepository.existsById(id)) {
+            throw new RuntimeException("Chef not found with id: " + id);
+        }
+        chefRepository.deleteById(id);
     }
 }
