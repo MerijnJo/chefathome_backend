@@ -16,4 +16,5 @@ public record ChefDetailDto(
         List<String> setMenus,
         List<String> dishGallery,
         String extraInformation
+        // trying to add reviews later
 ) {}
