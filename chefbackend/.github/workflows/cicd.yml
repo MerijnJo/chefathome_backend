@@ -30,12 +30,10 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build with Maven
-        working-directory: ./chefbackend
-        run: mvn clean install -DskipTests
+        run: mvn -f chefbackend/pom.xml clean install -DskipTests
 
       - name: Run Tests
-        working-directory: ./chefbackend
-        run: mvn test
+        run: mvn -f chefbackend/pom.xml test
 
       - name: Generate Test Report
         if: always()
@@ -82,10 +80,9 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build and analyze
-        working-directory: ./chefbackend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MerijnJo_chefathome_backend
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MerijnJo_chefathome_backend -f chefbackend/pom.xml
 
   deploy:
     name: Deploy to Production
