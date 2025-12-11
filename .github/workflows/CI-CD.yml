@@ -30,9 +30,11 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build with Maven
+        working-directory: ./chefbackend
         run: mvn clean install -DskipTests
 
       - name: Run Tests
+        working-directory: ./chefbackend
         run: mvn test
 
       - name: Generate Test Report
@@ -40,14 +42,14 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Maven Tests
-          path: target/surefire-reports/*.xml
+          path: chefbackend/target/surefire-reports/*.xml
           reporter: java-junit
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: chefathome-backend
-          path: target/*.jar
+          path: chefbackend/target/*.jar
 
   sonarqube:
     name: SonarQube Analysis
@@ -80,6 +82,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build and analyze
+        working-directory: ./chefbackend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MerijnJo_chefathome_backend
