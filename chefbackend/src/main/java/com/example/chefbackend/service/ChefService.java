@@ -1,6 +1,7 @@
 package com.example.chefbackend.service;
 
 import com.example.chefbackend.dto.ChefDetailDto;
+import com.example.chefbackend.dto.ChefFilterDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.mapper.ChefMapper;
@@ -56,4 +57,16 @@ public class ChefService {
         }
         chefRepository.deleteById(id);
     }
+
+    public List<ChefSummaryDto> getFilteredChefs(ChefFilterDto filter) {
+        return chefRepository.findChefsByFilters(
+                filter.foodOrigin(),
+                filter.expertise(),
+                filter.minExperience(),
+                filter.maxExperience(),
+                filter.minBasePrice(),
+                filter.maxBasePrice()
+        );
+    }
+
 }
