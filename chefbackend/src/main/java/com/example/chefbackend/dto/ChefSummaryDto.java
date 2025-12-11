@@ -9,4 +9,5 @@ public record ChefSummaryDto(
         String foodOrigin,
         String expertise,
         Integer basePrice
+        //infrastrucute workflow test
 ) {}
