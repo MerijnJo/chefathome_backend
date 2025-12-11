@@ -90,7 +90,11 @@ jobs:
         working-directory: ./chefbackend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=MerijnJo_chefathome_backend
+        run: |
+          mvn -B clean verify sonar:sonar \
+            -Dsonar.projectKey=MerijnJo_chefathome_backend \
+            -Dsonar.organization=merijnjo \
+            -Dsonar.host.url=https://sonarcloud.io
 
   deploy:
     name: Deploy to Production
