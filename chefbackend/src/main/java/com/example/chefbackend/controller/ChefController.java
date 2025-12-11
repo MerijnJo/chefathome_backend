@@ -1,7 +1,7 @@
 package com.example.chefbackend.controller;
 
 import com.example.chefbackend.dto.ChefDetailDto;
-import com.example.chefbackend.dto.ChefSummaryDto;
+import com.example.chefbackend.dto.ChefFilterDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.service.ChefService;
 import org.springframework.http.HttpStatus;
@@ -22,8 +22,19 @@ public class ChefController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ChefSummaryDto>> getAllChefs() {
-        return ResponseEntity.ok(chefService.getAllChefsSummary());
+    public ResponseEntity<List<ChefSummaryDto>> getChefs(
+            @RequestParam(required = false) String foodOrigin,
+            @RequestParam(required = false) String expertise,
+            @RequestParam(required = false) Integer minExperience,
+            @RequestParam(required = false) Integer maxExperience,
+            @RequestParam(required = false) Integer minBasePrice,
+            @RequestParam(required = false) Integer maxBasePrice
+    ) {
+        ChefFilterDto filter = new ChefFilterDto(
+                foodOrigin, expertise, minExperience, maxExperience, minBasePrice, maxBasePrice
+        );
+        List<ChefSummaryDto> chefs = chefService.getFilteredChefs(filter);
+        return ResponseEntity.ok(chefs);
     }
 
     @GetMapping("/{id}")
