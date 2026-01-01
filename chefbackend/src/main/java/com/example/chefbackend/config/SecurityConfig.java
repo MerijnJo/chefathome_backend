@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -13,11 +15,20 @@ import java.util.Arrays;
 
 /**
  * Security configuration for Chef@Home application
- * Configures CORS and disables CSRF for REST API
+ * Configures CORS, disables CSRF for REST API, and provides password encoding
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    /**
+     * Password encoder bean for hashing user passwords
+     * Uses BCrypt hashing algorithm
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     /**
      * Configure security filter chain
