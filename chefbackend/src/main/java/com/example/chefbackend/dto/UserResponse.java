@@ -7,7 +7,6 @@ public class UserResponse {
     private Long id;
     private String email;
     private String username;
-    private String role;
     private LocalDateTime createdAt;
 
     // Constructor from User entity
@@ -15,7 +14,6 @@ public class UserResponse {
         this.id = user.getId();
         this.email = user.getEmail();
         this.username = user.getUsername();
-        this.role = user.getRole();
         this.createdAt = user.getCreatedAt();
     }
 
@@ -42,14 +40,6 @@ public class UserResponse {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {

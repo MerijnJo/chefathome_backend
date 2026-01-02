@@ -1,5 +1,6 @@
 package com.example.chefbackend.service;
 
+import com.example.chefbackend.dto.RegisterRequest;
 import com.example.chefbackend.model.User;
 import com.example.chefbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,60 +9,47 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-/**
- * Service layer for user management operations
- * Handles user registration, authentication, and password hashing
- */
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    private PasswordEncoder passwordEncoder;
+
+    public User login(String email, String password) {
+        if (email == null || password == null) {
+            throw new IllegalArgumentException("Email and password must not be null");
+        }
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        User user = userOptional.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        return user;
     }
 
-    /**
-     * Register a new user
-     * Validates uniqueness of email and username, hashes password
-     */
-    public User registerUser(String email, String username, String password) {
-        // Check if email already exists
-        if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email already in use");
+    public User register(RegisterRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Registration request must not be null");
         }
 
-        // Check if username already exists
-        if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already taken");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
         }
 
-        // Create new user with hashed password
-        User user = new User(email, username, passwordEncoder.encode(password));
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         return userRepository.save(user);
-    }
-
-    /**
-     * Find user by email
-     */
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    /**
-     * Find user by username
-     */
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    /**
-     * Verify user password for login
-     */
-    public boolean verifyPassword(User user, String rawPassword) {
-        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 }
