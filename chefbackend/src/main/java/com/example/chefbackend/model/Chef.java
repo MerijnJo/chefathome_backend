@@ -25,7 +25,9 @@ public class Chef {
 
     private Integer basePrice; // base price per person
 
-    // Detailed view fields
+    @Column(name = "view_count")
+    private Integer viewCount = 0;
+
     @Column(length = 1000)
     private String about; // longer description
 
@@ -50,7 +52,6 @@ public class Chef {
     @Column(length = 1000)
     private String extraInformation;
 
-    // Constructors
     public Chef() {}
 
     public Chef(String name, String profilePicture, Integer experience, String foodOrigin,
@@ -61,6 +62,7 @@ public class Chef {
         this.foodOrigin = foodOrigin;
         this.expertise = expertise;
         this.basePrice = basePrice;
+        this.viewCount = 0;
     }
 
     // Getters and Setters
@@ -118,6 +120,18 @@ public class Chef {
 
     public void setBasePrice(Integer basePrice) {
         this.basePrice = basePrice;
+    }
+
+    public Integer getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Integer viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public void incrementViewCount() {
+        this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
     }
 
     public String getAbout() {

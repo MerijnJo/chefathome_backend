@@ -3,7 +3,6 @@ package com.example.chefbackend.service;
 import com.example.chefbackend.dto.ChefDetailDto;
 import com.example.chefbackend.dto.ChefFilterDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
-import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.mapper.ChefMapper;
 import com.example.chefbackend.model.Chef;
 import com.example.chefbackend.repository.ChefRepository;
@@ -58,7 +57,13 @@ public class ChefService {
         chefRepository.deleteById(id);
     }
 
-    public List<ChefSummaryDto> getFilteredChefs(ChefFilterDto filter) {
+    public List<ChefSummaryDto> getFilteredChefs(ChefFilterDto filter, String sortBy) {
+        // If sortBy is "mostViewed", return sorted by view count
+        if ("mostViewed".equalsIgnoreCase(sortBy)) {
+            return chefRepository.findAllByOrderByViewCountDesc();
+        }
+
+        // Otherwise, use existing filter logic
         return chefRepository.findChefsByFilters(
                 filter.foodOrigin(),
                 filter.expertise(),
@@ -68,5 +73,4 @@ public class ChefService {
                 filter.maxBasePrice()
         );
     }
-
 }

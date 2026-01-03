@@ -28,4 +28,9 @@ public interface ChefRepository extends JpaRepository<Chef, Long> {
             @Param("minBasePrice") Integer minBasePrice,
             @Param("maxBasePrice") Integer maxBasePrice
     );
+
+    // Find all chefs sorted by view count descending
+    @Query("SELECT new com.example.chefbackend.dto.ChefSummaryDto(c.id, c.name, c.profilePicture, c.experience, c.foodOrigin, c.expertise, c.basePrice) " +
+            "FROM Chef c ORDER BY c.viewCount DESC")
+    List<ChefSummaryDto> findAllByOrderByViewCountDesc();
 }
