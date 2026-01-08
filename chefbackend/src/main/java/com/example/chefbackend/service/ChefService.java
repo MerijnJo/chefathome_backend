@@ -2,6 +2,7 @@ package com.example.chefbackend.service;
 
 import com.example.chefbackend.dto.ChefDetailDto;
 import com.example.chefbackend.dto.ChefFilterDto;
+import com.example.chefbackend.dto.ChefLeaderboardDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.mapper.ChefMapper;
 import com.example.chefbackend.model.Chef;
@@ -58,12 +59,10 @@ public class ChefService {
     }
 
     public List<ChefSummaryDto> getFilteredChefs(ChefFilterDto filter, String sortBy) {
-        // If sortBy is "mostViewed", return sorted by view count
         if ("mostViewed".equalsIgnoreCase(sortBy)) {
             return chefRepository.findAllByOrderByViewCountDesc();
         }
 
-        // Otherwise, use existing filter logic
         return chefRepository.findChefsByFilters(
                 filter.foodOrigin(),
                 filter.expertise(),
@@ -72,5 +71,9 @@ public class ChefService {
                 filter.minBasePrice(),
                 filter.maxBasePrice()
         );
+    }
+
+    public List<ChefLeaderboardDto> getTopChefs() {
+        return chefRepository.findTop5ByViewCount();
     }
 }
