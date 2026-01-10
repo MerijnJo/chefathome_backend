@@ -9,6 +9,9 @@ public class UserResponse {
     private String username;
     private LocalDateTime createdAt;
 
+    public UserResponse() {
+    }
+
     // Constructor from User entity
     public UserResponse(User user) {
         this.id = user.getId();

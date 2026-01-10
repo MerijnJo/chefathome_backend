@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+  flyway:
+    enabled: false
+
+  security:
+    user:
+      name: test
+      password: test
+
+jwt:
+  secret: test-secret-key-for-unit-tests-minimum-256-bits-long
+  expiration: 3600000
+
+logging:
+  level:
+    com.example.chefbackend: DEBUG
