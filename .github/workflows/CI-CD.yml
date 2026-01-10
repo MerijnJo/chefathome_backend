@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - '**'
+      - '**'  # Run op alle branches
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
@@ -42,33 +42,19 @@ jobs:
         working-directory: ./chefbackend
         run: mvn clean install -DskipTests
 
-      - name: Run Unit Tests
+      - name: Run All Tests
         working-directory: ./chefbackend
-        run: mvn test -Dtest="**/service/*Test,**/repository/*Test"
-        env:
-          SPRING_PROFILES_ACTIVE: test
-
-      - name: Upload Unit Test Report
-        if: always()
-        uses: dorny/test-reporter@v1
-        with:
-          name: Unit Tests (Service + Repository)
-          path: chefbackend/target/surefire-reports/TEST-**/service/*Test.xml,chefbackend/target/surefire-reports/TEST-**/repository/*Test.xml
-          reporter: java-junit
-
-      - name: Run Integration Tests
-        working-directory: ./chefbackend
-        run: mvn test -Dtest="**/controller/*Test,**/integration/*Test"
+        run: mvn test
         env:
           SPRING_PROFILES_ACTIVE: test
           TESTCONTAINERS_RYUK_DISABLED: true
 
-      - name: Upload Integration Test Report
+      - name: Generate Test Report
         if: always()
         uses: dorny/test-reporter@v1
         with:
-          name: Integration Tests (Controller + E2E)
-          path: chefbackend/target/surefire-reports/TEST-**/controller/*Test.xml,chefbackend/target/surefire-reports/TEST-**/integration/*Test.xml
+          name: All Tests (Unit + Integration)
+          path: chefbackend/target/surefire-reports/*.xml
           reporter: java-junit
 
       - name: Upload JAR artifact
