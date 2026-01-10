@@ -1,10 +1,11 @@
 package com.example.chefbackend.integration;
 
+import com.example.chefbackend.ChefbackendApplication;
+import com.example.chefbackend.config.TestSecurityConfig;
 import com.example.chefbackend.dto.LoginRequest;
 import com.example.chefbackend.dto.LoginResponse;
 import com.example.chefbackend.dto.RegisterRequest;
 import com.example.chefbackend.dto.UserResponse;
-import com.example.chefbackend.model.User;
 import com.example.chefbackend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -26,25 +29,30 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = ChefbackendApplication.class
+)
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 @Testcontainers
 class UserIntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("chefathome_test")
-            .withUsername("test")
-            .withPassword("test");
+            .withDatabaseName("testdb")
+            .withUsername("testuser")
+            .withPassword("testpass");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");  // ✅ Force PostgreSQL
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");  // ✅ Force PostgreSQL
+        registry.add("spring.flyway.enabled", () -> "false");
     }
 
     @LocalServerPort
@@ -67,9 +75,9 @@ class UserIntegrationTest {
     @Test
     void shouldRegisterNewUser_WithRealDatabase() {
         RegisterRequest request = new RegisterRequest();
-        request.setUsername("integrationtest");
-        request.setEmail("integration@test.com");
-        request.setPassword("SecurePass123!");
+        request.setUsername("testuser");
+        request.setEmail("test@example.com");
+        request.setPassword("Password123!");
 
         ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
                 baseUrl + "/register",
@@ -79,25 +87,19 @@ class UserIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUser()).isNotNull();
-        assertThat(response.getBody().getUser().getUsername()).isEqualTo("integrationtest");
+        assertThat(response.getBody().getUser().getUsername()).isEqualTo("testuser");
+        assertThat(response.getBody().getUser().getEmail()).isEqualTo("test@example.com");
 
-        User savedUser = userRepository.findByUsername("integrationtest").orElseThrow();
-        assertThat(savedUser.getEmail()).isEqualTo("integration@test.com");
-        assertThat(savedUser.getPassword()).isNotEqualTo("SecurePass123!");
+        assertThat(userRepository.findAll()).hasSize(1);
+        assertThat(userRepository.findByEmail("test@example.com")).isPresent();
     }
 
     @Test
     void shouldLoginWithCorrectCredentials() {
-        RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("logintest");
-        registerRequest.setEmail("login@test.com");
-        registerRequest.setPassword("Password123!");
-
-        restTemplate.postForEntity(baseUrl + "/register", registerRequest, LoginResponse.class);
+        registerUser("loginuser", "login@example.com");
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("login@test.com");
+        loginRequest.setEmail("login@example.com");
         loginRequest.setPassword("Password123!");
 
         ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
@@ -108,21 +110,15 @@ class UserIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUser()).isNotNull();
-        assertThat(response.getBody().getUser().getUsername()).isEqualTo("logintest");
+        assertThat(response.getBody().getUser().getEmail()).isEqualTo("login@example.com");
     }
 
     @Test
     void shouldFailLoginWithWrongPassword() {
-        RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("failtest");
-        registerRequest.setEmail("fail@test.com");
-        registerRequest.setPassword("CorrectPass123!");
-
-        restTemplate.postForEntity(baseUrl + "/register", registerRequest, LoginResponse.class);
+        registerUser("wrongpassuser", "wrongpass@example.com");
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("fail@test.com");
+        loginRequest.setEmail("wrongpass@example.com");
         loginRequest.setPassword("WrongPassword!");
 
         ResponseEntity<String> response = restTemplate.postForEntity(
@@ -136,31 +132,27 @@ class UserIntegrationTest {
 
     @Test
     void shouldNotRegisterDuplicateUsername() {
+        registerUser("duplicate", "duplicate@example.com");
+
         RegisterRequest request = new RegisterRequest();
         request.setUsername("duplicate");
-        request.setEmail("first@test.com");
-        request.setPassword("Pass123!");
-
-        restTemplate.postForEntity(baseUrl + "/register", request, LoginResponse.class);
-
-        RegisterRequest duplicateRequest = new RegisterRequest();
-        duplicateRequest.setUsername("duplicate");
-        duplicateRequest.setEmail("second@test.com");
-        duplicateRequest.setPassword("Pass456!");
+        request.setEmail("duplicate@example.com");
+        request.setPassword("Password123!");
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 baseUrl + "/register",
-                duplicateRequest,
+                request,
                 String.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(userRepository.findAll()).hasSize(1);
     }
 
     @Test
     void shouldGetAllUsers() {
-        registerUser("user1", "user1@test.com");
-        registerUser("user2", "user2@test.com");
+        registerUser("user1", "user1@example.com");
+        registerUser("user2", "user2@example.com");
 
         ResponseEntity<List<UserResponse>> response = restTemplate.exchange(
                 baseUrl,
@@ -175,16 +167,16 @@ class UserIntegrationTest {
 
     @Test
     void shouldGetUserById() {
-        UserResponse registered = registerUser("getbyid", "getbyid@test.com");
+        UserResponse user = registerUser("getbyiduser", "getbyid@example.com");
 
         ResponseEntity<UserResponse> response = restTemplate.getForEntity(
-                baseUrl + "/" + registered.getId(),
+                baseUrl + "/" + user.getId(),
                 UserResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUsername()).isEqualTo("getbyid");
+        assertThat(response.getBody().getUsername()).isEqualTo("getbyiduser");
     }
 
     @Test

@@ -15,10 +15,17 @@ spring:
     console:
       enabled: false
 
+  flyway:
+    enabled: false
+
   security:
     user:
       name: test
       password: test
+
+jwt:
+  secret: test-secret-key-for-unit-tests-minimum-256-bits-long
+  expiration: 3600000
 
 logging:
   level:
