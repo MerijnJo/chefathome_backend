@@ -7,6 +7,10 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   security:
     enabled: false
+
+spring.autoconfigure.exclude:
+  - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
