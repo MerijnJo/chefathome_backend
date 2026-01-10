@@ -1,5 +1,6 @@
 package com.example.chefbackend.repository;
 
+import com.example.chefbackend.dto.ChefLeaderboardDto;
 import com.example.chefbackend.dto.ChefSummaryDto;
 import com.example.chefbackend.model.Chef;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +29,12 @@ public interface ChefRepository extends JpaRepository<Chef, Long> {
             @Param("minBasePrice") Integer minBasePrice,
             @Param("maxBasePrice") Integer maxBasePrice
     );
+
+    @Query("SELECT new com.example.chefbackend.dto.ChefSummaryDto(c.id, c.name, c.profilePicture, c.experience, c.foodOrigin, c.expertise, c.basePrice) " +
+            "FROM Chef c ORDER BY c.viewCount DESC")
+    List<ChefSummaryDto> findAllByOrderByViewCountDesc();
+
+    @Query("SELECT new com.example.chefbackend.dto.ChefLeaderboardDto(c.id, c.name, c.profilePicture, c.viewCount) " +
+            "FROM Chef c ORDER BY c.viewCount DESC LIMIT 5")
+    List<ChefLeaderboardDto> findTop5ByViewCount();
 }
