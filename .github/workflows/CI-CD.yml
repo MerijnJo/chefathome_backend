@@ -1,9 +1,13 @@
- name: CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
+    branches:
+      - '**'
   pull_request:
     types: [opened, synchronize, reopened]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -38,16 +42,33 @@ jobs:
         working-directory: ./chefbackend
         run: mvn clean install -DskipTests
 
-      - name: Run Tests
+      - name: Run Unit Tests
         working-directory: ./chefbackend
-        run: mvn test
+        run: mvn test -Dtest="**/service/*Test,**/repository/*Test"
+        env:
+          SPRING_PROFILES_ACTIVE: test
 
-      - name: Generate Test Report
+      - name: Upload Unit Test Report
         if: always()
         uses: dorny/test-reporter@v1
         with:
-          name: Maven Tests
-          path: chefbackend/target/surefire-reports/*.xml
+          name: Unit Tests (Service + Repository)
+          path: chefbackend/target/surefire-reports/TEST-**/service/*Test.xml,chefbackend/target/surefire-reports/TEST-**/repository/*Test.xml
+          reporter: java-junit
+
+      - name: Run Integration Tests
+        working-directory: ./chefbackend
+        run: mvn test -Dtest="**/controller/*Test,**/integration/*Test"
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          TESTCONTAINERS_RYUK_DISABLED: true
+
+      - name: Upload Integration Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Integration Tests (Controller + E2E)
+          path: chefbackend/target/surefire-reports/TEST-**/controller/*Test.xml,chefbackend/target/surefire-reports/TEST-**/integration/*Test.xml
           reporter: java-junit
 
       - name: Upload JAR artifact
@@ -111,5 +132,4 @@ jobs:
       - name: Deploy to server
         run: |
           echo "Configure deployment based on your target environment"
-          echo "Examples: Docker Hub, AWS, Azure, Google Cloud, or custom server"
           ls -la
