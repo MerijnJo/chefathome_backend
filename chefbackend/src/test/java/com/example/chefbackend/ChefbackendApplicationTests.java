@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@Import(TestSecurityConfig.class)  // ✅ Import test security config
+@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 class ChefbackendApplicationTests {
 
