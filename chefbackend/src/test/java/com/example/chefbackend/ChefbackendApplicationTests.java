@@ -11,5 +11,4 @@ class ChefbackendApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }
