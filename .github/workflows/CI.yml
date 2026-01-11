@@ -76,3 +76,18 @@ jobs:
           name: backend-dockerfile
           path: chefbackend/Dockerfile
           retention-days: 1
+
+  trigger-deployment:
+    name: Trigger Infrastructure Deployment
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Infrastructure Pipeline
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            https://api.github.com/repos/MerijnJo/chefathome_infrastructure/dispatches \
+            -d '{"event_type":"backend-updated"}'
